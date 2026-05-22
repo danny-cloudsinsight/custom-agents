@@ -107,10 +107,11 @@ These instructions enforce enterprise-grade engineering standards for PowerShell
 
 These global standards apply everywhere. For deeper guidance on specific domains, reference specialized skill documentation:
 
-- **powershell-scripting**: Advanced function design, module structure, parameter patterns, performance
-- **powershell-review**: PSScriptAnalyzer rules, code quality metrics, maintainability assessment
-- **powershell-testing**: Pester patterns, unit/integration testing, mocking, CI/CD integration
-- **powershell-security**: Compliance frameworks, hardening, audit logging, secret management patterns
-- **powershell-azure**: Azure service integration, runbooks, resource automation, monitoring
+- **powershell-scripting**: Function design, script structure, module layout, parameters, pipeline support, performance
+- **powershell-review**: PSScriptAnalyzer, anti-pattern detection, code quality, maintainability, refactoring recommendations
+- **powershell-testing**: Pester v5, unit tests, integration tests, mocking, test organization, CI validation
+- **powershell-security**: Secret handling, identity, least privilege, auditability, compliance-sensitive automation
+- **powershell-azure**: Az modules, Azure Automation, Azure Functions, resource automation, monitoring, operational resilience
 
 Ask for skill-specific guidance when implementing domain expertise beyond global standards.
+

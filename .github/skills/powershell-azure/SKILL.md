@@ -1,95 +1,106 @@
-# PowerShell Azure Integration Skill
+# powershell-azure
 
-Expert guidance for Azure PowerShell SDK usage, automation, resource management, and cloud integration patterns.
+## Purpose
+Provide practical Azure automation guidance for PowerShell using Az modules across local scripts, Azure Automation runbooks, and Azure Functions.
 
-## Topics Covered
+## Activation Scenarios
+- Implementing or reviewing Az-based resource automation.
+- Designing runbook or function automation flows.
+- Handling authentication for unattended Azure execution.
+- Addressing Azure throttling, retries, and operational resilience.
+- Establishing structured operational logging for Azure jobs.
 
-### Azure PowerShell Fundamentals
-- TODO: Az module installation and updates
-- TODO: Authentication methods (interactive, service principal, managed identity)
-- TODO: Context and subscription management
-- TODO: Error handling and retry logic
+## Scope
+This skill covers:
+- Az module usage and lifecycle considerations.
+- Runtime-aware design for runbooks and Functions.
+- Idempotent Azure resource operations.
+- Retry, throttling, and transient-failure handling.
+- Operational logging and monitoring signals for automation.
+- Azure Automation and Azure Functions constraints for PowerShell 7+ workers.
 
-### Azure Resource Management
-- TODO: Resource group operations
-- TODO: Resource creation and configuration
-- TODO: Tagging and resource organization
-- TODO: Cost management and optimization
+This skill does not cover:
+- Full Azure architecture design or landing zone planning.
+- Non-Azure PowerShell design details (delegate to powershell-scripting).
+- Deep security policy and secret governance (delegate to powershell-security).
+- Test implementation details (delegate to powershell-testing).
 
-### Azure Services Integration
-- TODO: Virtual Machines (VMs) automation
-- TODO: Storage Accounts and blob management
-- TODO: Azure SQL and database operations
-- TODO: App Service and Function App deployment
+## Core Guidance
+- Use modern Az modules; do not introduce AzureAD or MSOnline in new automation.
+- Pin or validate required Az module versions in managed runtimes when behavior depends on specific cmdlet features.
+- Design Azure automation to be idempotent:
+	- Repeated execution should converge to the same state.
+- Prefer managed identity for unattended Azure authentication where supported.
+- Avoid interactive prompts in runbooks and function-triggered automation.
+- Account for runtime constraints:
+	- Azure Automation job environment and module availability.
+	- Azure Functions execution timeout and cold-start implications.
+	- PowerShell worker version, managed dependency behavior, and sandbox limitations.
+- Implement resilient remote call behavior:
+	- Detect transient failures and throttle responses.
+	- Apply bounded retries with backoff.
+- Emit structured objects and consistent status outputs for downstream tooling.
+- Include operational context in logs:
+	- Resource identifiers.
+	- Correlation-friendly operation IDs.
+	- Outcome and failure category.
 
-### Azure Automation
-- TODO: Runbook development patterns
-- TODO: Scheduled automation workflows
-- TODO: Webhook integration
-- TODO: Update management automation
+## Recommended Patterns
+- Runtime split pattern:
+	- Shared core logic in reusable functions.
+	- Thin runbook/function entrypoints that bind runtime input.
+- Idempotent upsert pattern for resources:
+	- Read current state.
+	- Compare desired state.
+	- Apply only needed changes.
+- Retry pattern for Az calls:
+	- Retry on 429 and transient transport errors.
+	- Cap retry count and total duration.
+- Logging pattern:
+	- Structured status objects for success and failure.
+	- Minimal, non-sensitive diagnostic fields.
+- Context pattern:
+	- Validate target subscription/tenant context before mutation.
+	- Avoid leaking Az context between jobs; set context explicitly in unattended runs.
+- Monitoring pattern:
+	- Emit records that can be correlated in job output, Application Insights, or Log Analytics.
+	- Keep diagnostic fields non-sensitive and stable.
 
-### Identity & Access Management
-- TODO: Azure AD (Entra ID) integration
-- TODO: Role assignments and RBAC
-- TODO: Managed identities for services
-- TODO: Service principal management
+## Anti-Patterns to Detect
+- Interactive Connect-AzAccount workflows in unattended automation.
+- Assumptions that local modules and cloud runtime modules are identical.
+- Relying on ambient Azure context instead of selecting tenant, subscription, and identity intentionally.
+- Blind create operations without pre-checks.
+- Infinite or unbounded retry loops.
+- Parsing human-formatted output instead of object properties.
+- Mixing Azure resource mutation with unrelated local machine administration logic.
 
-### Azure Automation & Runbooks
-- TODO: Runbook design patterns
-- TODO: Shared runbook libraries
-- TODO: Hybrid worker configuration
-- TODO: Job scheduling and monitoring
+## Examples to Prefer
+- Short examples that show managed identity authentication in unattended context.
+- Compact idempotent resource operation examples.
+- Small retry/backoff examples for throttled Az calls.
+- Brief runbook vs function entrypoint examples showing shared core logic.
 
-### Monitoring & Logging
-- TODO: Application Insights integration
-- TODO: Azure Monitor and alerts
-- TODO: Log Analytics and KQL
-- TODO: Diagnostic settings configuration
+## Validation Checks
+- Module and command validation:
+	- Confirm required Az modules are available in target runtime.
+	- Confirm PowerShell worker version and module versions match script requirements.
+- Static analysis:
+	- Invoke-ScriptAnalyzer -Path . -Recurse
+- Operational checks:
+	- Verify scripts are non-interactive in unattended paths.
+	- Verify idempotency by running workflow twice and comparing terminal state.
+	- Verify logs include operation context without sensitive data.
+- Runtime checks:
+	- For runbooks: validate job success, warnings, and retry behavior.
+	- For functions: validate trigger behavior, timeout posture, and observable outputs.
 
-## Authentication Patterns
-
-### Interactive Authentication
-```powershell
-# TODO: Connect-AzAccount pattern
-# TODO: Multi-factor authentication handling
-# TODO: Subscription selection
-```
-
-### Service Principal Authentication
-- TODO: Client secret authentication
-- TODO: Certificate-based authentication
-- TODO: Managed identity authentication
-- TODO: Federated identity
-
-### Managed Identity Pattern
-- TODO: System-assigned identity setup
-- TODO: User-assigned identity setup
-- TODO: Identity permission delegation
-- TODO: Cross-subscription access
-
-## Resource Management Patterns
-
-- TODO: Batch operations and bulk management
-- TODO: Idempotent resource creation
-- TODO: Template deployment automation
-- TODO: Resource lifecycle management
-
-## Best Practices
-
-- TODO: Error handling and retry strategies
-- TODO: Rate limiting and throttling
-- TODO: Cost optimization approaches
-- TODO: Security and compliance
-
-## References
-
-- TODO: Azure PowerShell documentation
-- TODO: Azure SDKs and tools
-- TODO: Community samples and patterns
-- TODO: Microsoft Learn modules
-
-## Use Cases
-
-WHEN: Azure resource automation, Azure PowerShell SDK, runbook development, Azure service integration, authentication patterns, resource management, monitoring setup, Azure Function development, Azure Automation, Infrastructure as Code, managed identity patterns.
-
-DO NOT USE FOR: general scripting (use powershell-scripting), code quality (use powershell-review), testing (use powershell-testing), security hardening (use powershell-security).
+## Related Skills
+- powershell-scripting:
+	- Delegate for function-level contract and pipeline design.
+- powershell-security:
+	- Delegate for secret handling, identity hardening, and least-privilege decisions.
+- powershell-testing:
+	- Delegate for unit and integration testing patterns around Az automation.
+- powershell-review:
+	- Delegate for analyzer triage and maintainability-driven refactoring.

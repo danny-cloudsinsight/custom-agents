@@ -1,82 +1,95 @@
-# PowerShell Security Skill
+# powershell-security
 
-Expert guidance for secure PowerShell scripting, credential management, compliance, and hardening practices.
+## Purpose
+Provide implementation-focused security guidance for PowerShell automation, including secret handling, credential patterns, least privilege, and auditability.
 
-## Topics Covered
+## Activation Scenarios
+- Designing credential and secret flows in automation scripts.
+- Reviewing code for sensitive data exposure risk.
+- Selecting managed identity, Key Vault, or SecretManagement integration patterns.
+- Hardening scripts that interact with privileged operations.
+- Evaluating security posture of generated PowerShell code.
 
-### Credential Management
-- TODO: PSCredential best practices
-- TODO: Secure string handling
-- TODO: Certificate-based authentication
-- TODO: Managed identity and service principals
+## Scope
+This skill covers:
+- Secret and credential handling patterns.
+- Authentication choice guidance for automation contexts.
+- Least-privilege access and auditability considerations.
+- Detection of unsafe execution patterns.
 
-### Authentication & Authorization
-- TODO: Authentication flow patterns
-- TODO: RBAC (Role-Based Access Control)
-- TODO: Principle of least privilege
-- TODO: Account delegation strategies
+This skill does not cover:
+- Formal threat modeling, penetration testing, security certification, or compliance sign-off.
+- Deep test design (delegate to powershell-testing).
+- General code quality triage (delegate to powershell-review).
+- Azure runtime mechanics beyond security implications (delegate to powershell-azure).
 
-### Secret Management
-- TODO: Azure Key Vault integration
-- TODO: Secret injection patterns
-- TODO: Environment variable security
-- TODO: Configuration management security
+## Core Guidance
+- Never hardcode secrets, tokens, passwords, or connection strings.
+- Never log secrets or raw credential material.
+- Prefer managed identity where runtime support exists.
+- When managed identity is unavailable, prefer secure stores and short-lived credential retrieval.
+- Use Key Vault or SecretManagement when secrets must be retrieved at runtime.
+- Pass credentials via secure objects and scoped parameters, not plaintext strings.
+- Prefer certificate, federated, or managed identity flows over long-lived client secrets for unattended automation.
+- Treat sensitive inputs and outputs as tainted data:
+	- Sanitize logs and error messages.
+	- Avoid echoing command lines containing secrets.
+- Reject unsafe execution constructs, including Invoke-Expression and dynamic command concatenation from untrusted input.
+- Enforce least privilege by default:
+	- Grant only required roles/actions.
+	- Scope access to required resource boundary.
+- Make security-relevant operations auditable through structured logs and clear operation boundaries.
 
-### Script Hardening
-- TODO: Script signature validation
-- TODO: Execution policy configuration
-- TODO: Constrained language mode
-- TODO: AppLocker policies
+## Recommended Patterns
+- Identity-first pattern:
+	- Attempt managed identity.
+	- Fall back to securely managed credential sources only when required.
+- Secret access pattern:
+	- Retrieve at point-of-use.
+	- Hold in memory for minimum necessary scope.
+	- Do not persist to disk unless explicitly encrypted and required.
+- Logging pattern:
+	- Log operation intent and outcome.
+	- Redact secret-bearing fields.
+- Input validation pattern:
+	- Validate high-risk parameters early.
+	- Constrain accepted formats for identifiers and paths.
+- Review-boundary pattern:
+	- State when a recommendation needs formal security review or owner approval.
+	- Document accepted residual risk for exceptions.
 
-### Logging & Auditing
-- TODO: Module logging configuration
-- TODO: Script block logging setup
-- TODO: Event log monitoring
-- TODO: Compliance reporting
+## Anti-Patterns to Detect
+- Hardcoded secrets in script files, parameters, or defaults.
+- Plaintext credentials in variables, environment logs, or transcripts.
+- Writing secret values to verbose or error streams.
+- Using Invoke-Expression for convenience.
+- Over-privileged service principals or broad contributor roles without justification.
+- Reusing privileged credentials across unrelated automation contexts.
+- Persisting tokens, SecureString values, or decrypted secret material to disk without a documented requirement.
 
-### Compliance & Standards
-- TODO: CIS Microsoft Windows Server benchmarks
-- TODO: DISA STIG hardening guidelines
-- TODO: PCI DSS compliance patterns
-- TODO: HIPAA security requirements
+## Examples to Prefer
+- Small examples showing secure retrieval from Key Vault or SecretManagement without exposing values.
+- Brief managed identity-first authentication examples.
+- Minimal redaction examples for log output.
+- Short before/after examples replacing unsafe dynamic execution with explicit command invocation.
 
-### Common Vulnerabilities
-- TODO: Credential exposure in logs
-- TODO: Command injection prevention
-- TODO: Path traversal prevention
-- TODO: Insecure deserialization
+## Validation Checks
+- Static checks:
+	- Scan for likely secret literals and insecure execution commands.
+	- Run Invoke-ScriptAnalyzer -Path . -Recurse and review security-relevant findings first.
+- Review criteria:
+	- No secret values in source, logs, or default parameters.
+	- Authentication method matches runtime security posture.
+	- Access scopes follow least-privilege intent.
+	- Sensitive operations are auditable.
+	- Exceptions that affect security posture have explicit owner approval.
 
-## Security Patterns
-
-### Secure Credential Handling
-```powershell
-# TODO: Using PSCredential securely
-# TODO: Credential retrieval from Key Vault
-# TODO: Session credential management
-```
-
-### Protected Script Deployment
-- TODO: Code signing implementation
-- TODO: Execution policy hardening
-- TODO: Audit logging setup
-- TODO: Change tracking
-
-## Best Practices
-
-- TODO: Least privilege access
-- TODO: Defense in depth strategies
-- TODO: Security code review checklist
-- TODO: Incident response patterns
-
-## References
-
-- TODO: Microsoft security documentation
-- TODO: NIST cybersecurity framework
-- TODO: Industry security guidelines
-- TODO: Threat modeling resources
-
-## Use Cases
-
-WHEN: security hardening, credential handling, authentication patterns, secret management, compliance requirements, vulnerability assessment, audit logging, access control, secure deployment, RBAC configuration.
-
-DO NOT USE FOR: general scripting (use powershell-scripting), code quality analysis (use powershell-review), test implementation (use powershell-testing), Azure resource automation (use powershell-azure).
+## Related Skills
+- powershell-scripting:
+	- Delegate when security remediation requires restructuring function contracts.
+- powershell-review:
+	- Delegate for broader maintainability and analyzer triage.
+- powershell-testing:
+	- Delegate to validate security controls through unit and integration tests.
+- powershell-azure:
+	- Delegate for Azure-specific identity, role assignment, and automation runtime behavior.

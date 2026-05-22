@@ -1,75 +1,111 @@
-# PowerShell Code Review Skill
+# powershell-review
 
-Guidance for analyzing, reviewing, and improving PowerShell script quality using PSScriptAnalyzer and best practices.
+## Purpose
+Provide structured quality review for PowerShell code using PSScriptAnalyzer, maintainability heuristics, and production-readiness criteria.
 
-## Topics Covered
+## Activation Scenarios
+- Reviewing generated or hand-written PowerShell before merge.
+- Interpreting PSScriptAnalyzer results and prioritizing remediation.
+- Refactoring code with maintainability debt.
+- Evaluating whether code is overengineered or underengineered for the task.
+- Assessing production readiness in automation code.
 
-### Static Analysis
-- TODO: PSScriptAnalyzer rule interpretation
-- TODO: Rule severity levels and categories
-- TODO: Suppressing legitimate rule violations
-- TODO: Custom rule development
+## Scope
+This skill covers:
+- Static analysis interpretation and remediation planning.
+- PSScriptAnalyzer rule selection, configuration, and suppression review.
+- Maintainability and readability assessment.
+- Refactoring guidance with risk-aware sequencing.
+- Review of code quality signals for production use.
 
-### Code Quality Metrics
-- TODO: Cyclomatic complexity
-- TODO: Function length and readability
-- TODO: Naming consistency
-- TODO: Code duplication detection
+This skill does not cover:
+- Detailed implementation design of functions (delegate to powershell-scripting).
+- Test implementation details (delegate to powershell-testing).
+- Security architecture decisions (delegate to powershell-security).
+- Azure runtime behavior and service constraints (delegate to powershell-azure).
 
-### Performance Analysis
-- TODO: Script execution time profiling
-- TODO: Memory usage optimization
-- TODO: Pipeline inefficiencies
-- TODO: Benchmark comparisons
+## Core Guidance
+- Treat analyzer output as triage input, not an automatic rewrite order.
+- Prefer repository-level analyzer settings when rules or exclusions must be consistent across CI and local runs.
+- Classify findings by risk:
+	- Correctness and security impact first.
+	- Operational reliability second.
+	- Style and readability third.
+- Remediate with smallest safe change that preserves behavior.
+- Require explicit justification for suppressions:
+	- Why rule is not applicable.
+	- Why alternative remediation is worse.
+	- Scope suppression to the narrowest location.
+- Review generated code for hidden coupling, weak contracts, and fragile assumptions.
+- Evaluate maintainability with practical signals:
+	- Function responsibility clarity.
+	- Naming consistency and intent.
+	- Branching complexity and duplication.
+	- Predictable error and output behavior.
+- Detect overengineering:
+	- Abstractions with no reuse path.
+	- Excessive indirection for simple workflows.
+- Detect underengineering:
+	- Script-level global state for reusable logic.
+	- Missing validation and weak error semantics.
+- Check PowerShell 7+ and cross-platform assumptions when code is intended for shared or cloud automation.
 
-### Maintainability Assessment
-- TODO: Code readability evaluation
-- TODO: Documentation completeness
-- TODO: Version compatibility
-- TODO: Technical debt identification
+## Recommended Patterns
+- Review workflow:
+	- Run analyzer.
+	- Confirm the expected analyzer settings file is used.
+	- Group findings by risk.
+	- Fix high-impact items first.
+	- Re-run analyzer and regression tests.
+- Suppression hygiene:
+	- Localize suppressions to function or line scope.
+	- Include reason comments that survive future review.
+- Refactor progression:
+	- Extract pure helper logic first.
+	- Introduce stronger contracts next.
+	- Simplify call sites last.
+- Review outputs should include:
+	- Findings.
+	- Risk level.
+	- Recommended fix strategy.
+	- Validation step.
 
-### Best Practices Review
-- TODO: Error handling verification
-- TODO: Parameter validation checking
-- TODO: Logging and tracing presence
-- TODO: Platform compatibility assessment
+## Anti-Patterns to Detect
+- Blanket suppressions at file scope without rationale.
+- Fixing style warnings while leaving correctness defects.
+- Refactors that alter behavior without test coverage updates.
+- Analyzer-clean but unreadable code.
+- Analyzer configuration that hides broad rule categories without documented risk acceptance.
+- Excessive script length with mixed concerns.
+- Cargo-cult patterns copied from unrelated scenarios.
 
-## PSScriptAnalyzer Rules
+## Examples to Prefer
+- Short finding-to-fix examples:
+	- One analyzer warning.
+	- Minimal remediation.
+	- One validation command.
+- Small suppression examples showing narrow scope and reason.
+- Refactor examples that reduce complexity without rewriting whole files.
+- Review summaries that separate blocking issues from optional improvements.
 
-### Design Rules
-- TODO: Function design violations
-- TODO: Unnecessary complexity
-- TODO: Unreachable code detection
-- TODO: Empty catch blocks
+## Validation Checks
+- Static analysis:
+	- Invoke-ScriptAnalyzer -Path . -Recurse
+	- Use the repository analyzer settings when one exists.
+- Review gates:
+	- No unresolved high-risk analyzer findings without explicit waiver.
+	- Suppressions include documented rationale.
+	- Function complexity and duplication reduced or justified.
+- Regression safety:
+	- Run unit tests after non-trivial remediation.
+	- Confirm output contract did not change unintentionally.
 
-### Performance Rules
-- TODO: Avoid pipeline loops
-- TODO: Inefficient filtering
-- TODO: Unused variables
-- TODO: Script block compilations
-
-### Compatibility Rules
-- TODO: Platform-specific cmdlets
-- TODO: Version-dependent features
-- TODO: Deprecated cmdlet usage
-- TODO: Module compatibility
-
-## Review Process
-
-- TODO: Automated analysis workflow
-- TODO: Manual verification steps
-- TODO: Issue prioritization
-- TODO: Remediation suggestions
-
-## References
-
-- TODO: PSScriptAnalyzer GitHub repository
-- TODO: Rule documentation and examples
-- TODO: Community analyzers and extensions
-- TODO: Custom rule patterns
-
-## Use Cases
-
-WHEN: code review, script analysis, quality assessment, PSScriptAnalyzer configuration, code quality metrics, performance analysis, best practices verification, maintainability evaluation.
-
-DO NOT USE FOR: script writing (use powershell-scripting), security-specific review (use powershell-security), test creation (use powershell-testing), Azure patterns (use powershell-azure).
+## Related Skills
+- powershell-scripting:
+	- Delegate when remediation requires redesigning function contracts or script structure.
+- powershell-testing:
+	- Delegate to add or update tests supporting risky refactors.
+- powershell-security:
+	- Delegate when findings involve secret exposure, unsafe execution, or privilege boundaries.
+- powershell-azure:
+	- Delegate when review findings depend on Azure runtime behavior.
