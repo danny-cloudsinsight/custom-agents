@@ -5,14 +5,14 @@
         'PSAvoidUsingCmdletAliases'
         'PSAvoidUsingConvertToSecureStringWithPlainText'
         'PSAvoidUsingInvokeExpression'
-        'PSAvoidUsingUserNameAndPasswordParams'
+        'PSAvoidUsingPlainTextForPassword'
+        'PSAvoidUsingUsernameAndPasswordParams'
 
         # Maintainability and correctness
         'PSAvoidUsingEmptyCatchBlock'
         'PSAvoidUsingPositionalParameters'
         'PSUseApprovedVerbs'
         'PSUseCmdletCorrectly'
-        'PSUseNamedParameters'
         'PSUsePSCredentialType'
         'PSUseSingularNouns'
 

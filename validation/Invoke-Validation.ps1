@@ -20,17 +20,18 @@
 
 .EXAMPLE
     ./Invoke-Validation.ps1
-    ./Invoke-Validation.ps1 -Path './scripts' -Strict
+    ./Invoke-Validation.ps1 -Recurse -Strict
+    ./Invoke-Validation.ps1 -Path './scripts' -Recurse -Strict
 #>
 
 [CmdletBinding()]
 param(
     [Parameter(ValueFromPipeline = $true)]
-    [ValidateScript({ Test-Path -Path $_ -PathType Container })]
-    [string]$Path = '.',
+    [ValidateScript({ Test-Path -LiteralPath $_ -PathType Container })]
+    [string]$Path = (Split-Path -Path $PSScriptRoot -Parent),
 
     [Parameter()]
-    [ValidateScript({ Test-Path -Path $_ -PathType Leaf })]
+    [ValidateScript({ Test-Path -LiteralPath $_ -PathType Leaf })]
     [string]$SettingsPath = (Join-Path -Path $PSScriptRoot -ChildPath 'PSScriptAnalyzerSettings.psd1'),
 
     [Parameter()]
@@ -47,19 +48,23 @@ begin {
     $script:ValidationFailed = $false
     $script:Summaries = [System.Collections.Generic.List[object]]::new()
 
-    $module = Get-Module -ListAvailable -Name 'PSScriptAnalyzer' | Select-Object -First 1
+    $module = Get-Module -ListAvailable -Name 'PSScriptAnalyzer' |
+        Sort-Object -Property Version -Descending |
+        Select-Object -First 1
+
     if (-not $module) {
         Write-Error 'PSScriptAnalyzer is not installed. Install it with: Install-Module PSScriptAnalyzer -Scope CurrentUser'
         $script:ValidationFailed = $true
         return
     }
 
+    Import-Module -Name $module.Path -ErrorAction Stop
     Write-Verbose ("Using PSScriptAnalyzer version {0}" -f $module.Version)
 
-    $resolvedSettingsPath = (Resolve-Path -Path $SettingsPath).Path
+    $resolvedSettingsPath = (Resolve-Path -LiteralPath $SettingsPath).Path
     try {
         # Ensure the settings file loads as a valid PowerShell data file.
-        $script:AnalyzerSettings = Import-PowerShellDataFile -Path $resolvedSettingsPath
+        $null = Import-PowerShellDataFile -Path $resolvedSettingsPath
         $script:ResolvedSettingsPath = $resolvedSettingsPath
     }
     catch {
@@ -74,11 +79,13 @@ process {
     }
 
     try {
-        $resolvedPath = (Resolve-Path -Path $Path).Path
-        Write-Host ("Validating path: {0}" -f $resolvedPath) -ForegroundColor Cyan
+        $resolvedPath = (Resolve-Path -LiteralPath $Path).Path
+        Write-Information ("Validating path: {0}" -f $resolvedPath) -InformationAction Continue
 
-        $targetFiles = Get-ChildItem -Path $resolvedPath -File -Recurse:$Recurse |
-            Where-Object { $_.Extension -in @('.ps1', '.psm1', '.psd1') }
+        $targetFiles = @(
+            Get-ChildItem -LiteralPath $resolvedPath -File -Recurse:$Recurse |
+                Where-Object { $_.Extension -in @('.ps1', '.psm1', '.psd1') }
+        )
 
         if (-not $targetFiles) {
             Write-Warning ("No PowerShell files found at '{0}'." -f $resolvedPath)
@@ -88,7 +95,7 @@ process {
         Write-Verbose ("Discovered {0} PowerShell file(s)." -f $targetFiles.Count)
 
         $results = foreach ($file in $targetFiles) {
-            Invoke-ScriptAnalyzer -Path $file.FullName -Settings $script:AnalyzerSettings
+            Invoke-ScriptAnalyzer -Path $file.FullName -Settings $script:ResolvedSettingsPath
         }
         $errorResults = $results | Where-Object { $_.Severity -eq 'Error' }
         $warningResults = $results | Where-Object { $_.Severity -eq 'Warning' }
@@ -106,7 +113,7 @@ process {
         $null = $script:Summaries.Add($summary)
 
         if ($summary.ResultCount -eq 0) {
-            Write-Host 'No issues found.' -ForegroundColor Green
+            Write-Information 'No issues found.' -InformationAction Continue
             return
         }
 
@@ -140,8 +147,8 @@ process {
 
 end {
     if ($script:Summaries.Count -gt 0) {
-        Write-Host ''
-        Write-Host 'Validation summary:' -ForegroundColor Cyan
+        Write-Information '' -InformationAction Continue
+        Write-Information 'Validation summary:' -InformationAction Continue
         $script:Summaries | Format-Table -AutoSize
     }
 
@@ -150,7 +157,7 @@ end {
         exit 1
     }
 
-    Write-Host 'Validation succeeded.' -ForegroundColor Green
+    Write-Information 'Validation succeeded.' -InformationAction Continue
     Write-Verbose 'Validation process completed.'
     exit 0
 }
