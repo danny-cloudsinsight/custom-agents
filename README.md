@@ -5,6 +5,7 @@ A custom GitHub Copilot agent specialized in PowerShell scripting, automation, s
 ## Overview
 
 This agent provides expert-level guidance for:
+
 - **PowerShell Scripting**: Modern PowerShell 7+ best practices and patterns
 - **Code Review**: PSScriptAnalyzer integration and quality assurance
 - **Testing**: Pester framework and test-driven development
@@ -22,9 +23,33 @@ This agent provides expert-level guidance for:
 
 TODO: Installation and setup instructions
 
+## Validation
+
+Run local PowerShell validation with `PSScriptAnalyzer`:
+
+1. Install dependency (one-time):
+
+```powershell
+Install-Module PSScriptAnalyzer -Scope CurrentUser
+```
+
+2. Run validation from the repository root:
+
+```powershell
+pwsh -NoProfile -File ./validation/Invoke-Validation.ps1 -Path . -Recurse
+```
+
+3. Enable strict mode to fail on any findings (errors or warnings):
+
+```powershell
+pwsh -NoProfile -File ./validation/Invoke-Validation.ps1 -Path . -Recurse -Strict
+```
+
+By default, validation fails only when `Error` severity findings are detected.
+
 ## Project Structure
 
-```
+``` markdown
 .github/
 ├── copilot-instructions.md      # Agent configuration and behavior
 ├── agents/
